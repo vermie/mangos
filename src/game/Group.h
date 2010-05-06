@@ -178,6 +178,7 @@ class MANGOS_DLL_SPEC Group
         void   UpdateLooterGuid( Creature* creature, bool ifneed = false );
         void   SetLootThreshold(ItemQualities threshold) { m_lootThreshold = threshold; }
         void   Disband(bool hideDestroy=false);
+        void   SpoofGroupMemberFactions(Player* playerRemoved);
 
         // properties accessories
         uint32 GetId() const { return m_Id; }
