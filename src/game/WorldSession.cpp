@@ -202,7 +202,7 @@ bool WorldSession::Update(PacketFilter& updater)
     ///- Retrieve packets from the receive queue and call the appropriate handlers
     /// not process packets if socket already closed
     WorldPacket* packet;
-    while (m_Socket && !m_Socket->IsClosed() && _recvQueue.next(packet, updater))
+    while (m_Socket && m_Socket->IsOpen() && _recvQueue.next(packet, updater))
     {
         /*#if 1
         sLog.outError( "MOEP: %s (0x%.4X)",

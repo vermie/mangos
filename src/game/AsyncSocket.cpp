@@ -45,7 +45,8 @@ AsyncSocket::AsyncSocket() :
     m_sendBuffer(NULL),
     m_busyBuffer(NULL),
     m_header(NULL),
-    m_writeMode(IDLE)
+    m_writeMode(IDLE),
+    m_pending(0)
 {
 }
 
@@ -56,7 +57,8 @@ AsyncSocket::AsyncSocket(AsyncAcceptor *acceptor) :
     m_sendBuffer(NULL),
     m_busyBuffer(NULL),
     m_header(NULL),
-    m_writeMode(IDLE)
+    m_writeMode(IDLE),
+    m_pending(0)
 {
 }
 
@@ -69,6 +71,13 @@ AsyncSocket::~AsyncSocket()
     delete m_receiveBuffer;
     delete m_sendBuffer;
     delete m_busyBuffer;
+}
+
+bool AsyncSocket::IsClosed() const
+{
+    // IsClosed is used to determine if the socket should be deallocated
+    // we can't do that safely until this socket has no pending operations
+    return !m_open && m_pending == 0;
 }
 
 void AsyncSocket::Close()
@@ -143,11 +152,23 @@ bool AsyncSocket::BeginRead()
         return false;
     }
 
+    m_pending |= READ;
+
     return true;
 }
 
 void AsyncSocket::handle_read_stream(const ACE_Asynch_Read_Stream::Result &result)
 {
+    // when a read completion event occurs, we must perform these operations:
+    //    1 mark that we have no pending read
+    //    2 start the next pending operation in the proactor's queue
+    //    3 parse packets from the read buffer
+    //    4 crunch read buffer, if necessary
+    //    5 enqueue next read
+    //
+    // 1 & 2 must happen unconditionally, and before anything else
+
+    m_pending &= ~READ;
     m_runner->DequeueOp();
 
     if (!m_open) return;
@@ -262,6 +283,8 @@ bool AsyncSocket::BeginWrite()
         return false;
     }
 
+    m_pending |= WRITE;
+
     return true;
 }
 
@@ -311,6 +334,17 @@ int AsyncSocket::SendPacket(const WorldPacket &packet)
 
 void AsyncSocket::handle_write_stream(const ACE_Asynch_Write_Stream::Result &result)
 {
+    // when a write completion event occurs, we must perform these operations:
+    //    1  mark that we have no pending write
+    //    2  start the next pending operation in the proactor's queue
+    //    3a finish sending if buffer is not empty
+    //    3b swap send buffers and enqueue send operation
+    //    3c mark that we are idle
+    //
+    // 1 & 2 must happen unconditionally, and before anything else
+    // 3 a,b,c are mutually exclusive - only one will occur per completion
+
+    m_pending &= ~WRITE;
     m_runner->DequeueOp();
 
     if (!m_open) return;

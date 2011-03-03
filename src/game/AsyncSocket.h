@@ -30,6 +30,7 @@ class AsyncSocket : public WorldSocket, public ACE_Service_Handler
 public:
     ~AsyncSocket();
 
+    virtual bool IsClosed() const;
     void Close();
 
     int SendPacket(const WorldPacket &packet);
@@ -46,6 +47,9 @@ protected:
 
     virtual uint32 socketHandle() { return uint32(handle()); }
     ProactorRunnable* m_runner;
+
+    enum PendingOp { WRITE = 1, READ = 2 };
+    uint32 m_pending;
 
     // network in
     AsyncAcceptor *m_acceptor;

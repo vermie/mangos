@@ -111,6 +111,7 @@ public:
 
     /// Check if socket is closed.
     virtual bool IsClosed() const { return !m_open; }
+    bool IsOpen() const { return m_open; }
 
     /// Close the socket.
     virtual void Close();
