@@ -401,6 +401,7 @@ int WorldSocket::HandlePing(WorldPacket &packet)
                     sLog.outError("WorldSocket::HandlePing: Player kicked for "
                                   "over-speed pings address = %s",
                                   GetRemoteAddress().c_str());
+                    Close();
 
                     return -1;
                 }
