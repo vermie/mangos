@@ -58,6 +58,8 @@ void ProactorMgr::StopNetwork()
 
     // now stop the proactor running the AsyncAcceptor
     ACE_Proactor::instance()->proactor_end_event_loop();
+    wait();
+    ACE_Proactor::close_singleton();
 }
 
 void ProactorMgr::Wait()
