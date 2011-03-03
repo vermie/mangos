@@ -125,6 +125,9 @@ void AsyncSocket::open(ACE_HANDLE handle, ACE_Message_Block &message)
 // this function should only be called by ProactorRunnable
 bool AsyncSocket::BeginRead()
 {
+    // return true only if an async operation started successfully
+    if (!m_open) return false;
+
     if (m_reader.read(*m_receiveBuffer, m_receiveBuffer->space()) == -1)
     {
         if (errno == EAGAIN || errno == EWOULDBLOCK)
@@ -145,7 +148,9 @@ bool AsyncSocket::BeginRead()
 
 void AsyncSocket::handle_read_stream(const ACE_Asynch_Read_Stream::Result &result)
 {
-    if (!m_runner->DequeueOp()) return;
+    m_runner->DequeueOp();
+
+    if (!m_open) return;
 
     if (!result.success())
     {
@@ -238,6 +243,9 @@ WorldPacket* AsyncSocket::GetNextPacket(ClientPktHeader* header)
 // this function should only be called by ProactorRunnable
 bool AsyncSocket::BeginWrite()
 {
+    // return true only if an async operation started successfully
+    if (!m_open) return false;
+
     // only write from busyBuffer - sendBuffer and swaps handled elsewhere
     if (m_writer.write(*m_busyBuffer, m_busyBuffer->length()) == -1)
     {
@@ -303,7 +311,9 @@ int AsyncSocket::SendPacket(const WorldPacket &packet)
 
 void AsyncSocket::handle_write_stream(const ACE_Asynch_Write_Stream::Result &result)
 {
-    if (!m_runner->DequeueOp() || !m_open) return;
+    m_runner->DequeueOp();
+
+    if (!m_open) return;
 
     if (!result.success() && !(errno == EAGAIN || errno == EWOULDBLOCK))
     {

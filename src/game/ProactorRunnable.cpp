@@ -70,13 +70,27 @@ ProactorRunnable::ProactorRunnable() :
 #endif
 }
 
-bool ProactorRunnable::DequeueOp()
+void ProactorRunnable::DequeueOp()
 {
-    if (!m_opLimit)
-        return true;
+    // this function will not return until one of the following is true:
+    //     there is no queue, ie ACE has no limit to the number of concurrent async operations
+    //     one queued operation has been started
+    //     m_opCount is decremented
 
-    bool ret = true;
-    ACE_GUARD_RETURN(ACE_Thread_Mutex, Guard, m_lock, false);
+    if (!m_opLimit) return;
+
+    ACE_GUARD(ACE_Thread_Mutex, Guard, m_lock);
+
+    bool succeeded = false;
+
+    // this loop dequeues operations until one succeeds
+#define DEQUEUE_UNTIL_SUCCEED(queue)                                            \
+    if (!queue.empty())                                                         \
+    {                                                                           \
+        while (!queue.empty() && !(succeeded = queue.front()->BeginWrite()))    \
+            queue.pop();                                                        \
+        if (succeeded) queue.pop();                                             \
+    }
 
     // check if we are able to begin a new operation
     // if we begin, we don't change op count (dequeue + enqueue = no change)
@@ -84,23 +98,12 @@ bool ProactorRunnable::DequeueOp()
     if (m_opLimit >= m_opCount)
     {
         // check for WRITE operation first, because deterministically they are more reliable
-        if (!m_writeQueue.empty())
-        {
-            ret = m_writeQueue.front()->BeginWrite();
-            m_writeQueue.pop();
-        }
-        else if (!m_readQueue.empty())
-        {
-            ret = m_readQueue.front()->BeginRead();
-            m_readQueue.pop();
-        }
-        else
-            m_opCount--;
+        DEQUEUE_UNTIL_SUCCEED(m_writeQueue);
+        if (!succeeded) DEQUEUE_UNTIL_SUCCEED(m_readQueue);
+        if (!succeeded) m_opCount--;
     }
     else
         m_opCount--;
-
-    return ret;
 }
 
 bool ProactorRunnable::EnqueueRead(AsyncSocket* socket)

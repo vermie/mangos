@@ -71,7 +71,7 @@ private:
 
     /*** begin concurrent io ops limits ***/
 public:
-    bool DequeueOp();
+    void DequeueOp();
     bool EnqueueWrite(AsyncSocket* socket);
     bool EnqueueRead(AsyncSocket* socket);
 
@@ -79,7 +79,7 @@ private:
     ACE_Thread_Mutex m_lock;
 
     uint32 m_opLimit;   // maximum number of concurrent async operations
-    uint32 m_opCount;   // the number of async operations initiated
+    uint32 m_opCount;   // the number of async operations initiated on the ACE_Proactor
 
     typedef std::queue<AsyncSocket*> IoQueue;
     IoQueue m_writeQueue;
