@@ -51,6 +51,8 @@ protected:
     enum PendingOp { WRITE = 1, READ = 2 };
     uint32 m_pending;
 
+    void Unrecoverable(const char* message);
+
     // network in
     AsyncAcceptor *m_acceptor;
     ACE_Message_Block *m_receiveBuffer;

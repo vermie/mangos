@@ -143,11 +143,7 @@ bool AsyncSocket::BeginRead()
             // if we get this error even with our own queue, need to stop using async io
             sLog.outError("Your platform has poor support for asynchronous IO - switch to Network.OldEngine = 1 in mangosd.conf");
 
-        if (errno != ECANCELED)
-        {
-            sLog.outError("AsyncSocket::BeginRead: %s (%d)", ACE_OS::strerror(errno), errno);
-            Close();
-        }
+        Unrecoverable("AsyncSocket::BeginRead");
 
         return false;
     }
@@ -178,13 +174,7 @@ void AsyncSocket::handle_read_stream(const ACE_Asynch_Read_Stream::Result &resul
         if (errno == EAGAIN || errno == EWOULDBLOCK)
             m_runner->EnqueueRead(this);    // these indicate that the data couldn't be sent immediately, and we must try again
         else
-        {
-            // unrecoverable error
-            if (errno != ECANCELED)
-                sLog.outError("AsyncSocket::handle_read_stream: %s (%d)", ACE_OS::strerror(errno), errno);
-
-            Close();
-        }
+            Unrecoverable("AsyncSocket::handle_read_stream");
 
         return;
     }
@@ -274,11 +264,7 @@ bool AsyncSocket::BeginWrite()
             // if we get this error even with our own queue, need to stop using async io
             sLog.outError("Your platform has poor support for asynchronous IO - switch to Network.OldEngine = 1 in mangosd.conf");
 
-        if (errno != ECANCELED)
-        {
-            sLog.outError("AsyncSocket::BeginWrite: %s (%d)", ACE_OS::strerror(errno), errno);
-            Close();
-        }
+        Unrecoverable("AsyncSocket::BeginWrite");
 
         return false;
     }
@@ -351,10 +337,7 @@ void AsyncSocket::handle_write_stream(const ACE_Asynch_Write_Stream::Result &res
 
     if (!result.success() && !(errno == EAGAIN || errno == EWOULDBLOCK))
     {
-        if (errno != ECANCELED)
-            sLog.outError("AsyncSocket::handle_write_stream %s (%d)", ACE_OS::strerror(errno), errno);
-
-        Close();
+        Unrecoverable("AsyncSocket::handle_write_stream");
         return;
     }
 
@@ -381,4 +364,24 @@ void AsyncSocket::handle_write_stream(const ACE_Asynch_Write_Stream::Result &res
         else
             m_writeMode = IDLE;
     }
+}
+
+void AsyncSocket::Unrecoverable(const char* message)
+{
+    switch(errno)
+    {
+        // connection terminated
+        case ECANCELED:
+        case 1236:      // win32 ERROR_CONNECTION_ABORTED
+        case 64:        // win32 ERROR_NETNAME_DELETED
+            sLog.outDebug("%s: %s (%d)", message, ACE_OS::strerror(errno), errno);
+            break;
+
+        // unexpected error
+        default:
+            sLog.outError("%s: %s (%d)", message, ACE_OS::strerror(errno), errno);
+            break;
+    }
+
+    Close();
 }
