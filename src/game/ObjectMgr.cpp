@@ -5610,7 +5610,7 @@ void ObjectMgr::PackGroupIds()
         delete result;
     }
 
-    BarGoLink bar(groupIds.size() + 1);
+    BarGoLink bar(uint64(groupIds.size() + 1));
     bar.step();
 
     uint32 groupId = 1;

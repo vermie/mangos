@@ -779,7 +779,7 @@ void MapPersistentStateManager::PackInstances()
         delete result;
     }
 
-    BarGoLink bar(InstanceSet.size() + 1);
+    BarGoLink bar(uint64(InstanceSet.size() + 1));
     bar.step();
 
     uint32 InstanceNumber = 1;
