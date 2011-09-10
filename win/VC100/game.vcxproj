@@ -360,6 +360,8 @@
     <ClCompile Include="..\..\src\game\ArenaTeam.cpp" />
     <ClCompile Include="..\..\src\game\ArenaTeamHandler.cpp" />
     <ClCompile Include="..\..\src\game\AuctionHouseBot\AuctionHouseBot.cpp" />
+    <ClCompile Include="..\..\src\game\AsyncAcceptor.cpp" />
+    <ClCompile Include="..\..\src\game\AsyncSocket.cpp" />
     <ClCompile Include="..\..\src\game\AuctionHouseHandler.cpp" />
     <ClCompile Include="..\..\src\game\AuctionHouseMgr.cpp" />
     <ClCompile Include="..\..\src\game\Bag.cpp" />
@@ -448,6 +450,7 @@
     <ClCompile Include="..\..\src\game\movement\packet_builder.cpp" />
     <ClCompile Include="..\..\src\game\movement\spline.cpp" />
     <ClCompile Include="..\..\src\game\movement\util.cpp" />
+    <ClCompile Include="..\..\src\game\NetworkEngine.cpp" />
     <ClCompile Include="..\..\src\game\NPCHandler.cpp" />
     <ClCompile Include="..\..\src\game\NullCreatureAI.cpp" />
     <ClCompile Include="..\..\src\game\Object.cpp" />
@@ -475,11 +478,14 @@
     <ClCompile Include="..\..\src\game\PlayerDump.cpp" />
     <ClCompile Include="..\..\src\game\PointMovementGenerator.cpp" />
     <ClCompile Include="..\..\src\game\PoolManager.cpp" />
+    <ClCompile Include="..\..\src\game\ProactorMgr.cpp" />
+    <ClCompile Include="..\..\src\game\ProactorRunnable.cpp" />
     <ClCompile Include="..\..\src\game\QueryHandler.cpp" />
     <ClCompile Include="..\..\src\game\QuestDef.cpp" />
     <ClCompile Include="..\..\src\game\QuestHandler.cpp" />
     <ClCompile Include="..\..\src\game\RandomMovementGenerator.cpp" />
     <ClCompile Include="..\..\src\game\ReactorAI.cpp" />
+    <ClCompile Include="..\..\src\game\ReactorSocket.cpp" />
     <ClCompile Include="..\..\src\game\ReputationMgr.cpp" />
     <ClCompile Include="..\..\src\game\ScriptMgr.cpp" />
     <ClCompile Include="..\..\src\game\SkillDiscovery.cpp" />
@@ -512,7 +518,7 @@
     <ClCompile Include="..\..\src\game\World.cpp" />
     <ClCompile Include="..\..\src\game\WorldSession.cpp" />
     <ClCompile Include="..\..\src\game\WorldSocket.cpp" />
-    <ClCompile Include="..\..\src\game\WorldSocketMgr.cpp" />
+    <ClCompile Include="..\..\src\game\ReactorMgr.cpp" />
     <ClCompile Include="..\..\src\game\vmap\BIH.cpp" />
     <ClCompile Include="..\..\src\game\vmap\MapTree.cpp" />
     <ClCompile Include="..\..\src\game\vmap\ModelInstance.cpp" />
@@ -527,6 +533,8 @@
     <ClInclude Include="..\..\src\game\AggressorAI.h" />
     <ClInclude Include="..\..\src\game\ArenaTeam.h" />
     <ClInclude Include="..\..\src\game\AuctionHouseBot\AuctionHouseBot.h" />
+    <ClInclude Include="..\..\src\game\AsyncAcceptor.h" />
+    <ClInclude Include="..\..\src\game\AsyncSocket.h" />
     <ClInclude Include="..\..\src\game\AuctionHouseMgr.h" />
     <ClInclude Include="..\..\src\game\Bag.h" />
     <ClInclude Include="..\..\src\game\BattleGround.h" />
@@ -611,6 +619,7 @@
     <ClInclude Include="..\..\src\game\movement\spline.h" />
     <ClInclude Include="..\..\src\game\movement\spline.impl.h" />
     <ClInclude Include="..\..\src\game\movement\typedefs.h" />
+    <ClInclude Include="..\..\src\game\NetworkEngine.h" />
     <ClInclude Include="..\..\src\game\NPCHandler.h" />
     <ClInclude Include="..\..\src\game\NullCreatureAI.h" />
     <ClInclude Include="..\..\src\game\Object.h" />
@@ -628,9 +637,12 @@
     <ClInclude Include="..\..\src\game\PlayerDump.h" />
     <ClInclude Include="..\..\src\game\PointMovementGenerator.h" />
     <ClInclude Include="..\..\src\game\PoolManager.h" />
+    <ClInclude Include="..\..\src\game\ProactorMgr.h" />
+    <ClInclude Include="..\..\src\game\ProactorRunnable.h" />
     <ClInclude Include="..\..\src\game\QuestDef.h" />
     <ClInclude Include="..\..\src\game\RandomMovementGenerator.h" />
     <ClInclude Include="..\..\src\game\ReactorAI.h" />
+    <ClInclude Include="..\..\src\game\ReactorSocket.h" />
     <ClInclude Include="..\..\src\game\ReputationMgr.h" />
     <ClInclude Include="..\..\src\game\ScriptMgr.h" />
     <ClInclude Include="..\..\src\game\SharedDefines.h" />
@@ -660,7 +672,7 @@
     <ClInclude Include="..\..\src\game\World.h" />
     <ClInclude Include="..\..\src\game\WorldSession.h" />
     <ClInclude Include="..\..\src\game\WorldSocket.h" />
-    <ClInclude Include="..\..\src\game\WorldSocketMgr.h" />
+    <ClInclude Include="..\..\src\game\ReactorMgr.h" />
     <ClInclude Include="..\..\src\game\vmap\BIH.h" />
     <ClInclude Include="..\..\src\game\vmap\IVMapManager.h" />
     <ClInclude Include="..\..\src\game\vmap\MapTree.h" />

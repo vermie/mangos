@@ -20,7 +20,7 @@
     \ingroup mangosd
 */
 
-#include "WorldSocketMgr.h"
+#include "NetworkEngine.h"
 #include "Common.h"
 #include "World.h"
 #include "WorldRunnable.h"
@@ -84,7 +84,7 @@ void WorldRunnable::run()
     // unload battleground templates before different singletons destroyed
     sBattleGroundMgr.DeleteAllBattleGrounds();
 
-    sWorldSocketMgr->StopNetwork();
+    sNetworkEngine->Stop();
 
     MapManager::Instance().UnloadAll();                     // unload all grids (including locked in memory)
 

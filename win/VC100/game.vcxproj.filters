@@ -30,6 +30,11 @@
     </Filter>
     <Filter Include="Movement">
       <UniqueIdentifier>{0ac140f9-89c1-4830-b673-514c5e8b4d37}</UniqueIdentifier>
+    <Filter Include="Server\Proactor">
+      <UniqueIdentifier>{f90e2ea3-e818-4685-b887-194683888250}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Server\Reactor">
+      <UniqueIdentifier>{4db81552-6139-4512-bc38-ebb6d1c4dc68}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -420,9 +425,6 @@
     <ClCompile Include="..\..\src\game\WorldSocket.cpp">
       <Filter>Server</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\game\WorldSocketMgr.cpp">
-      <Filter>Server</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\game\debugcmds.cpp">
       <Filter>Chat Commands</Filter>
     </ClCompile>
@@ -501,6 +503,26 @@
     </ClCompile>
     <ClCompile Include="..\..\src\game\movement\MoveSpline.cpp">
       <Filter>Movement</Filter>
+    <ClCompile Include="..\..\src\game\AsyncAcceptor.cpp">
+      <Filter>Server\Proactor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\AsyncSocket.cpp">
+      <Filter>Server\Proactor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\ProactorMgr.cpp">
+      <Filter>Server\Proactor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\ReactorSocket.cpp">
+      <Filter>Server\Reactor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\ReactorMgr.cpp">
+      <Filter>Server\Reactor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\NetworkEngine.cpp">
+      <Filter>Server</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\game\ProactorRunnable.cpp">
+      <Filter>Server\Proactor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -852,9 +874,6 @@
     <ClInclude Include="..\..\src\game\WorldSocket.h">
       <Filter>Server</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\game\WorldSocketMgr.h">
-      <Filter>Server</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\game\Language.h">
       <Filter>Tool</Filter>
     </ClInclude>
@@ -948,6 +967,26 @@
     </ClInclude>
     <ClInclude Include="..\..\src\game\movement\typedefs.h">
       <Filter>Movement</Filter>
+    <ClInclude Include="..\..\src\game\AsyncSocket.h">
+      <Filter>Server\Proactor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\AsyncAcceptor.h">
+      <Filter>Server\Proactor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\ProactorMgr.h">
+      <Filter>Server\Proactor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\ReactorSocket.h">
+      <Filter>Server\Reactor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\ReactorMgr.h">
+      <Filter>Server\Reactor</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\NetworkEngine.h">
+      <Filter>Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\game\ProactorRunnable.h">
+      <Filter>Server\Proactor</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

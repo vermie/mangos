@@ -1475,6 +1475,22 @@
 			Name="Server"
 			>
 			<File
+				RelativePath="..\..\src\game\AsyncSocket.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\AsyncSocket.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\AsyncAcceptor.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\AsyncAcceptor.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\DBCEnums.h"
 				>
 			</File>
@@ -1495,11 +1511,51 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\src\game\NetworkEngine.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\NetworkEngine.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\game\Opcodes.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\src\game\Opcodes.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\ProactorMgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\ProactorMgr.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\ProactorRunnable.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\ProactorRunnable.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\ReactorMgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\ReactorMgr.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\ReactorSocket.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\game\ReactorSocket.h"
 				>
 			</File>
 			<File
@@ -1528,14 +1584,6 @@
 			</File>
 			<File
 				RelativePath="..\..\src\game\WorldSocket.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\game\WorldSocketMgr.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\game\WorldSocketMgr.h"
 				>
 			</File>
 		</Filter>

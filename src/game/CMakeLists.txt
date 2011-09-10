@@ -46,7 +46,7 @@ source_group("Motion generators"
 )
 
 source_group("Server"
-  REGULAR_EXPRESSION Socket|Session|Opcodes|DBC
+  REGULAR_EXPRESSION Socket|Session|Opcodes|DBC|Network|Proactor|Acceptor
   FILES
     SharedDefines.h
 )

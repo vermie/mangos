@@ -40,6 +40,8 @@
 #include "Auth/HMACSHA1.h"
 #include "zlib/zlib.h"
 
+#include "AsyncSocket.h"
+
 // select opcodes appropriate for processing in Map::Update context for current session state
 static bool MapSessionFilterHelper(WorldSession* session, OpcodeHandler const& opHandle)
 {
@@ -82,16 +84,13 @@ bool WorldSessionFilter::Process(WorldPacket* packet)
 
 /// WorldSession constructor
 WorldSession::WorldSession(uint32 id, WorldSocket *sock, AccountTypes sec, uint8 expansion, time_t mute_time, LocaleConstant locale) :
-m_muteTime(mute_time), _player(NULL), m_Socket(sock),_security(sec), _accountId(id), m_expansion(expansion), _logoutTime(0),
+m_muteTime(mute_time), _player(NULL), m_Socket(sock), _security(sec), _accountId(id), m_expansion(expansion), _logoutTime(0),
 m_inQueue(false), m_playerLoading(false), m_playerLogout(false), m_playerRecentlyLogout(false), m_playerSave(false),
 m_sessionDbcLocale(sWorld.GetAvailableDbcLocale(locale)), m_sessionDbLocaleIndex(sObjectMgr.GetIndexForLocale(locale)),
 m_latency(0), m_tutorialState(TUTORIALDATA_UNCHANGED)
 {
     if (sock)
-    {
-        m_Address = sock->GetRemoteAddress ();
-        sock->AddReference ();
-    }
+        m_Address = sock->GetRemoteAddress();
 }
 
 /// WorldSession destructor
@@ -104,8 +103,7 @@ WorldSession::~WorldSession()
     /// - If have unclosed socket, close it
     if (m_Socket)
     {
-        m_Socket->CloseSocket ();
-        m_Socket->RemoveReference ();
+        delete m_Socket;
         m_Socket = NULL;
     }
 
@@ -130,7 +128,7 @@ char const* WorldSession::GetPlayerName() const
 /// Send a packet to the client
 void WorldSession::SendPacket(WorldPacket const* packet)
 {
-    if (!m_Socket)
+    if (!m_Socket || m_Socket->IsClosed())
         return;
 
     #ifdef MANGOS_DEBUG
@@ -169,8 +167,9 @@ void WorldSession::SendPacket(WorldPacket const* packet)
 
     #endif                                                  // !MANGOS_DEBUG
 
-    if (m_Socket->SendPacket (*packet) == -1)
-        m_Socket->CloseSocket ();
+    if (m_Socket)
+        if (m_Socket->SendPacket(*packet) == -1)
+            m_Socket->Close();
 }
 
 /// Add an incoming packet to the queue
@@ -300,9 +299,9 @@ bool WorldSession::Update(PacketFilter& updater)
     }
 
     ///- Cleanup socket pointer if need
-    if (m_Socket && m_Socket->IsClosed ())
+    if (m_Socket && m_Socket->IsClosed())
     {
-        m_Socket->RemoveReference ();
+        delete m_Socket;
         m_Socket = NULL;
     }
 
@@ -312,7 +311,7 @@ bool WorldSession::Update(PacketFilter& updater)
     {
         ///- If necessary, log the player out
         time_t currTime = time(NULL);
-        if (!m_Socket || (ShouldLogOut(currTime) && !m_playerLoading))
+        if (!m_Socket|| (ShouldLogOut(currTime) && !m_playerLoading))
             LogoutPlayer(true);
 
         if (!m_Socket)
@@ -507,7 +506,7 @@ void WorldSession::LogoutPlayer(bool Save)
 void WorldSession::KickPlayer()
 {
     if (m_Socket)
-        m_Socket->CloseSocket ();
+        m_Socket->Close();
 }
 
 /// Cancel channeling handler
