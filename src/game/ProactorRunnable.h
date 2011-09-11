@@ -22,8 +22,12 @@
 #include "ace/Proactor.h"
 #include "ace/Task.h"
 
-#include "ace/WIN32_Proactor.h"
-#include "ace/POSIX_Proactor.h"
+#ifdef ACE_HAS_AIO_CALLS
+#   include "ace/POSIX_Proactor.h"
+#   include "ace/POSIX_CB_Proactor.h"
+#elif ACE_HAS_WIN32_OVERLAPPED_IO
+#   include "ace/WIN32_Proactor.h"
+#endif
 
 #include <queue>
 

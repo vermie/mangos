@@ -23,6 +23,7 @@
 // need to get the size of the aio list
 class DummyProactor : private ACE_POSIX_AIOCB_Proactor
 {
+public:
     DummyProactor()
     {
         aiocb_list_max_size_ = ACE_AIO_MAX_SIZE;
