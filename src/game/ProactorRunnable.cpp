@@ -30,12 +30,20 @@ public:
         check_max_aio_num();
     }
 
-    size_t GetListSize() { return aiocb_list_max_size_; }
+    static size_t GetListSize()
+    {
+        DummyProactor dummy;
+        return dummy.aiocb_list_max_size_;
+    }
 };
+
+uint32 ProactorRunnable::s_opLimit = DummyProactor::GetListSize();
+#else
+uint32 ProactorRunnable::s_opLimit = 0;
 #endif
 
 ProactorRunnable::ProactorRunnable() :
-    m_clientCount(0), m_opCount(0), m_opLimit(0)
+    m_clientCount(0), m_opCount(0)
 {
     ACE_Proactor_Impl* implementation;
 
@@ -64,11 +72,6 @@ ProactorRunnable::ProactorRunnable() :
 #endif /* ACE_HAS_AIO_CALLS */
 
     m_proactor = new ACE_Proactor(implementation, true);
-
-#ifdef ACE_HAS_AIO_CALLS
-    DummyProactor temp;
-    m_opLimit = temp.GetListSize();
-#endif
 }
 
 void ProactorRunnable::DequeueOp()
@@ -78,7 +81,7 @@ void ProactorRunnable::DequeueOp()
     //     one queued operation has been started
     //     m_opCount is decremented
 
-    if (!m_opLimit) return;
+    if (!s_opLimit) return;
 
     ACE_GUARD(ACE_Thread_Mutex, Guard, m_lock);
 
@@ -96,7 +99,7 @@ void ProactorRunnable::DequeueOp()
     // check if we are able to begin a new operation
     // if we begin, we don't change op count (dequeue + enqueue = no change)
     // else we decrement op count
-    if (m_opLimit >= m_opCount)
+    if (s_opLimit >= m_opCount)
     {
         // check for WRITE operation first, because deterministically they are more reliable
         DEQUEUE_UNTIL_SUCCEED(m_writeQueue);
@@ -109,12 +112,12 @@ void ProactorRunnable::DequeueOp()
 
 bool ProactorRunnable::EnqueueRead(AsyncSocket* socket)
 {
-    if (!m_opLimit)
+    if (!s_opLimit)
         return socket->BeginRead();
 
     ACE_GUARD_RETURN(ACE_Thread_Mutex, Guard, m_lock, false);
 
-    if (m_opLimit > m_opCount)
+    if (s_opLimit > m_opCount)
     {
         m_opCount++;
         return socket->BeginRead();
@@ -128,12 +131,12 @@ bool ProactorRunnable::EnqueueRead(AsyncSocket* socket)
 
 bool ProactorRunnable::EnqueueWrite(AsyncSocket* socket)
 {
-    if (!m_opLimit)
+    if (!s_opLimit)
         return socket->BeginWrite();
 
     ACE_GUARD_RETURN(ACE_Thread_Mutex, Guard, m_lock, false);
 
-    if (m_opLimit > m_opCount)
+    if (s_opLimit > m_opCount)
     {
         m_opCount++;
         return socket->BeginWrite();

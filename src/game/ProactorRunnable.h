@@ -78,12 +78,14 @@ public:
     void DequeueOp();
     bool EnqueueWrite(AsyncSocket* socket);
     bool EnqueueRead(AsyncSocket* socket);
+    
+    static uint32 OpLimit() { return ProactorRunnable::s_opLimit; }
 
 private:
     ACE_Thread_Mutex m_lock;
 
-    uint32 m_opLimit;   // maximum number of concurrent async operations
-    uint32 m_opCount;   // the number of async operations initiated on the ACE_Proactor
+    static uint32 s_opLimit;    // maximum number of concurrent async operations
+    uint32 m_opCount;           // the number of async operations initiated on the ACE_Proactor
 
     typedef std::queue<AsyncSocket*> IoQueue;
     IoQueue m_writeQueue;
