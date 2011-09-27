@@ -67,11 +67,7 @@ private:
     ACE_Proactor* m_proactor;
     uint32 m_clientCount;       // for load-balancing only
 
-    int svc()
-    {
-        m_proactor->proactor_run_event_loop();
-        return 0;
-    }
+    int svc();
 
     /*** begin concurrent io ops limits ***/
 public:

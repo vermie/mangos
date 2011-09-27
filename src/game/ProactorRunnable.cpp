@@ -18,6 +18,7 @@
 
 #include "ProactorRunnable.h"
 #include "AsyncSocket.h"
+#include "Database/DatabaseEnv.h"
 
 #ifdef ACE_HAS_AIO_CALLS
 // need to get the size of the aio list
@@ -146,4 +147,18 @@ bool ProactorRunnable::EnqueueWrite(AsyncSocket* socket)
     // asynchronous write will be started asynchronously (from DequeueOp)
     m_writeQueue.push(socket);
     return true;
+}
+
+int ProactorRunnable::svc()
+{
+    // setup thread-local stuff for login database
+    LoginDatabase.ThreadStart();
+
+    // have ACE begin handling network events
+    m_proactor->proactor_run_event_loop();
+
+    // teardown thread-local stuff for login database
+    LoginDatabase.ThreadEnd();
+
+    return 0;
 }
