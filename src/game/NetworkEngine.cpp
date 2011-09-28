@@ -21,6 +21,7 @@
 #include "Log.h"
 
 #include "ProactorMgr.h"
+#include "ProactorRunnable.h"
 #include "ReactorMgr.h"
 #include "World.h"
 
@@ -37,7 +38,11 @@ bool NetworkEngine::Start(uint16 port, std::string bindIp)
     if (useAioConfig)
     {
         if (running = sProactorMgr->StartNetwork(port, bindIp))
+        {
             m_aio = true;
+            if (uint32 opLimit = ProactorRunnable::OpLimit())
+                sLog.outDetail("aio list limit: %u", opLimit);
+        }
         else
             sLog.outError("Failed to start asynchronous network IO, falling back to synchronous");
     }
