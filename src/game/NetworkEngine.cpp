@@ -31,27 +31,30 @@
 bool NetworkEngine::Start(uint16 port, std::string bindIp)
 {
     bool useAioConfig = !sConfig.GetBoolDefault("Network.OldEngine", false);
-    bool failed;
+    bool running = false;
 
 #ifdef MANGOS_USE_AIO
     if (useAioConfig)
     {
-        failed = !sProactorMgr->StartNetwork(port, bindIp);
-        m_aio = true;
+        if (running = sProactorMgr->StartNetwork(port, bindIp))
+            m_aio = true;
+        else
+            sLog.outError("Failed to start asynchronous network IO, falling back to synchronous");
     }
-    else
 #endif
+
+    if (!running)
     {
 #ifndef MANGOS_USE_AIO
         if (useAioConfig)
-            sLog.outError("Could not use asynchronous network IO, your platform does not support it.");
+            sLog.outError("Could not use asynchronous network IO, your platform or ACE library does not support it");
 #endif
 
-        failed = sReactorMgr->StartNetwork(port, bindIp) == -1;
+        running = sReactorMgr->StartNetwork(port, bindIp) != -1;
         m_aio = false;
     }
 
-    if (failed)
+    if (!running)
     {
         sLog.outError("Failed to start network");
         Log::WaitBeforeContinueIfNeed();
@@ -59,7 +62,7 @@ bool NetworkEngine::Start(uint16 port, std::string bindIp)
         // go down and shutdown the server
     }
 
-    return !failed;
+    return running;
 }
 
 void NetworkEngine::Stop()
