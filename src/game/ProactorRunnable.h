@@ -19,6 +19,8 @@
 #ifndef _PROACTOR_RUNNABLE_H
 #define _PROACTOR_RUNNABLE_H
 
+#include "Platform/Define.h"
+
 #include "ace/Proactor.h"
 #include "ace/Task.h"
 
