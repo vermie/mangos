@@ -26,7 +26,12 @@ ProactorRunnable::ProactorRunnable() :
     m_clientCount(0), m_opCount(0)
 {
     ACE_Proactor_Impl* implementation;
-    ACE_NEW(implementation, ProactorType);
+
+#ifdef ACE_HAS_AIO_CALLS
+    ACE_NEW(implementation, ProactorType(ACE_AIO_MAX_SIZE));    // POSIX
+#else
+    ACE_NEW(implementation, ProactorType);                      // Windows
+#endif
 
     m_proactor = new ACE_Proactor(implementation, true);
 }
