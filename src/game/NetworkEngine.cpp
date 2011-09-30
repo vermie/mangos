@@ -29,8 +29,31 @@
 #define MANGOS_USE_AIO
 #endif
 
+#if defined ACE_HAS_AIO_CALLS
+class DummyProactor : private ProactorType
+{
+public:
+    DummyProactor()
+    {
+        aiocb_list_max_size_ = ACE_AIO_MAX_SIZE;
+        check_max_aio_num();
+    }
+
+    static size_t GetListSize()
+    {
+        DummyProactor dummy;
+        return dummy.aiocb_list_max_size_;
+    }
+};
+#endif
+
 bool NetworkEngine::Start(uint16 port, std::string bindIp)
 {
+#ifdef ACE_HAS_AIO_CALLS
+    // get aio list size
+    ProactorRunnable::s_opLimit = DummyProactor::GetListSize();
+#endif
+
     bool useAioConfig = !sConfig.GetBoolDefault("Network.OldEngine", false);
     bool running = false;
 
@@ -40,8 +63,8 @@ bool NetworkEngine::Start(uint16 port, std::string bindIp)
         if (running = sProactorMgr->StartNetwork(port, bindIp))
         {
             m_aio = true;
-            if (uint32 opLimit = ProactorRunnable::OpLimit())
-                sLog.outDetail("aio list limit: %u", opLimit);
+            if (ProactorRunnable::s_opLimit)
+                sLog.outDetail("aio list limit: %u", ProactorRunnable::s_opLimit);
         }
         else
             sLog.outError("Failed to start asynchronous network IO, falling back to synchronous");

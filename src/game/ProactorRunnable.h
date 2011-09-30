@@ -27,8 +27,24 @@
 #ifdef ACE_HAS_AIO_CALLS
 #   include "ace/POSIX_Proactor.h"
 #   include "ace/POSIX_CB_Proactor.h"
-#elif defined ACE_HAS_WIN32_OVERLAPPED_IO
+#else
 #   include "ace/WIN32_Proactor.h"
+#endif
+
+#ifdef ACE_HAS_AIO_CALLS
+#   if defined (ACE_POSIX_AIOCB_PROACTOR)
+typedef ACE_POSIX_AIOCB_Proactor ProactorType;
+#   elif defined (ACE_POSIX_SIG_PROACTOR)
+typedef ACE_POSIX_SIG_Proactor ProactorType;
+#   elif !defined(ACE_HAS_BROKEN_SIGEVENT_STRUCT)
+typedef ACE_POSIX_CB_Proactor ProactorType;
+#   elif defined(ACE_HAS_POSIX_REALTIME_SIGNALS)
+typedef ACE_POSIX_SIG_Proactor ProactorType;
+#   else
+typedef ACE_POSIX_AIOCB_Proactor ProactorType;
+#   endif
+#else
+typedef ACE_WIN32_Proactor ProactorType;
 #endif
 
 #include <queue>
@@ -77,12 +93,10 @@ public:
     bool EnqueueWrite(AsyncSocket* socket);
     bool EnqueueRead(AsyncSocket* socket);
     
-    static uint32 OpLimit() { return ProactorRunnable::s_opLimit; }
-
+    static uint32 s_opLimit;    // maximum number of concurrent async operations
 private:
     ACE_Thread_Mutex m_lock;
 
-    static uint32 s_opLimit;    // maximum number of concurrent async operations
     uint32 m_opCount;           // the number of async operations initiated on the ACE_Proactor
 
     typedef std::queue<AsyncSocket*> IoQueue;

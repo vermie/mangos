@@ -20,57 +20,13 @@
 #include "AsyncSocket.h"
 #include "Database/DatabaseEnv.h"
 
-#ifdef ACE_HAS_AIO_CALLS
-// need to get the size of the aio list
-class DummyProactor : private ACE_POSIX_AIOCB_Proactor
-{
-public:
-    DummyProactor()
-    {
-        aiocb_list_max_size_ = ACE_AIO_MAX_SIZE;
-        check_max_aio_num();
-    }
-
-    static size_t GetListSize()
-    {
-        DummyProactor dummy;
-        return dummy.aiocb_list_max_size_;
-    }
-};
-
-uint32 ProactorRunnable::s_opLimit = DummyProactor::GetListSize();
-#else
 uint32 ProactorRunnable::s_opLimit = 0;
-#endif
 
 ProactorRunnable::ProactorRunnable() :
     m_clientCount(0), m_opCount(0)
 {
     ACE_Proactor_Impl* implementation;
-
-    // copied form ACE_Proactor ctor, but with increased aio list size
-#if defined (ACE_HAS_AIO_CALLS)
-      // POSIX Proactor.
-#  if defined (ACE_POSIX_AIOCB_PROACTOR)
-      ACE_NEW (implementation, ACE_POSIX_AIOCB_Proactor(ACE_AIO_MAX_SIZE));
-#  elif defined (ACE_POSIX_SIG_PROACTOR)
-      ACE_NEW (implementation, ACE_POSIX_SIG_Proactor(ACE_AIO_MAX_SIZE));
-#  else /* Default order: CB, SIG, AIOCB */
-#    if !defined(ACE_HAS_BROKEN_SIGEVENT_STRUCT)
-      ACE_NEW (implementation, ACE_POSIX_CB_Proactor(ACE_AIO_MAX_SIZE));
-#    else
-#      if defined(ACE_HAS_POSIX_REALTIME_SIGNALS)
-      ACE_NEW (implementation, ACE_POSIX_SIG_Proactor(ACE_AIO_MAX_SIZE));
-#      else
-      ACE_NEW (implementation, ACE_POSIX_AIOCB_Proactor(ACE_AIO_MAX_SIZE));
-#      endif /* ACE_HAS_POSIX_REALTIME_SIGNALS */
-#    endif /* !ACE_HAS_BROKEN_SIGEVENT_STRUCT */
-#  endif /* ACE_POSIX_AIOCB_PROACTOR */
-#elif (defined (ACE_WIN32) && !defined (ACE_HAS_WINCE))
-    // WIN_Proactor.
-    ACE_NEW (implementation,
-            ACE_WIN32_Proactor);
-#endif /* ACE_HAS_AIO_CALLS */
+    ACE_NEW(implementation, ProactorType);
 
     m_proactor = new ACE_Proactor(implementation, true);
 }
