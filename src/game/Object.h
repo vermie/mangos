@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -66,6 +66,7 @@ class WorldSession;
 class Creature;
 class Player;
 class Unit;
+class Group;
 class Map;
 class UpdateMask;
 class InstanceData;
@@ -356,6 +357,7 @@ class MANGOS_DLL_SPEC Object
 
         virtual bool HasQuest(uint32 /* quest_id */) const { return false; }
         virtual bool HasInvolvedQuest(uint32 /* quest_id */) const { return false; }
+
     protected:
 
         Object ( );
@@ -580,11 +582,15 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         Creature* SummonCreature(uint32 id, float x, float y, float z, float ang,TempSummonType spwtype,uint32 despwtime, bool asActiveObject = false);
 
         bool isActiveObject() const { return m_isActiveObject || m_viewPoint.hasViewers(); }
+        void SetActiveObjectState(bool active);
 
         ViewPoint& GetViewPoint() { return m_viewPoint; }
 
         // ASSERT print helper
         bool PrintCoordinatesError(float x, float y, float z, char const* descr) const;
+
+        virtual void StartGroupLoot(Group* group, uint32 timer) {}
+
     protected:
         explicit WorldObject();
 
@@ -594,9 +600,10 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         void SetLocationMapId(uint32 _mapId) { m_mapId = _mapId; }
         void SetLocationInstanceId(uint32 _instanceId) { m_InstanceId = _instanceId; }
 
+        virtual void StopGroupLoot() {}
+
         std::string m_name;
 
-        bool m_isActiveObject;
     private:
         Map * m_currMap;                                    //current object's Map location
 
@@ -605,10 +612,9 @@ class MANGOS_DLL_SPEC WorldObject : public Object
         uint32 m_phaseMask;                                 // in area phase state
 
         Position m_position;
-
         ViewPoint m_viewPoint;
-
         WorldUpdateCounter m_updateTracker;
+        bool m_isActiveObject;
 };
 
 #endif

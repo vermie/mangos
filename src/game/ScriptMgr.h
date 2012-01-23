@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -99,6 +99,10 @@ enum eScriptCommand
                                                             // datalong = stand state (enum UnitStandStateType)
                                                             // datalong2 = creature entry (searching for a buddy, closest to source), datalong3 = creature search radius
                                                             // data_flags = flag_target_as_source           = 0x01
+    SCRIPT_COMMAND_MODIFY_NPC_FLAGS         = 29,           // source=worldobject or target=worldobject (datalong1==0), else creature
+                                                            // datalong=NPCFlags
+                                                            // datalong1=creature entry, datalong2=search radius
+                                                            // data_flags = 0x01=add, 0x02=remove
 };
 
 #define MAX_TEXT_ID 4                                       // used for SCRIPT_COMMAND_TALK
@@ -307,6 +311,15 @@ struct ScriptInfo
             uint32 flags;                                   // data_flags
         } standState;
 
+        struct                                              // SCRIPT_COMMAND_MODIFY_NPC_FLAGS (29)
+        {
+            uint32 flag;                                    // datalong
+            uint32 creatureEntry;                           // datalong2
+            uint32 searchRadius;                            // datalong3
+            uint32 empty1;                                  // datalong4
+            uint32 data_flags;                              // data_flags
+        } npcFlag;
+
         struct
         {
             uint32 data[9];
@@ -339,8 +352,8 @@ struct ScriptAction
     ScriptInfo const* script;                               // pointer to static script data
 };
 
-typedef std::multimap<uint32, ScriptInfo> ScriptMap;
-typedef std::map<uint32, ScriptMap > ScriptMapMap;
+typedef std::multimap<uint32 /*delay*/, ScriptInfo> ScriptMap;
+typedef std::map<uint32 /*id*/, ScriptMap > ScriptMapMap;
 
 extern ScriptMapMap sQuestEndScripts;
 extern ScriptMapMap sQuestStartScripts;

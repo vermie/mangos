@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -104,8 +104,7 @@ class AuctionHouseObject
 
         uint32 GetCount() { return AuctionsMap.size(); }
 
-        AuctionEntryMap *GetAuctions() { return &AuctionsMap; }
-
+        AuctionEntryMap const& GetAuctions() const { return AuctionsMap; }
         AuctionEntryMapBounds GetAuctionsBounds() const {return AuctionEntryMapBounds(AuctionsMap.begin(), AuctionsMap.end()); }
 
         void AddAuction(AuctionEntry *ah)
@@ -122,7 +121,7 @@ class AuctionHouseObject
 
         bool RemoveAuction(uint32 id)
         {
-            return AuctionsMap.erase(id) ? true : false;
+            return AuctionsMap.erase(id);
         }
 
         void Update();

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,11 +42,11 @@ namespace Movement
     struct MoveSplineInitArgs
     {
         MoveSplineInitArgs(size_t path_capacity = 16) : path_Idx_offset(0),
-            velocity(0.f), parabolic_amplitude(0.f), time_perc(0.f), splineId(0)
+            velocity(0.f), parabolic_amplitude(0.f), time_perc(0.f), splineId(0), initialOrientation(0.f)
         {
             path.reserve(path_capacity);
         }
-       
+
         PointsArray path;
         FacingInfo facing;
         MoveSplineFlag flags;
@@ -55,8 +55,9 @@ namespace Movement
         float parabolic_amplitude;
         float time_perc;
         uint32 splineId;
+        float initialOrientation;
 
-        /**	Returns true to show that the arguments were configured correctly and MoveSpline initialization will succeed. */
+        /** Returns true to show that the arguments were configured correctly and MoveSpline initialization will succeed. */
         bool Validate() const;
     private:
         bool _checkPathBounds() const;

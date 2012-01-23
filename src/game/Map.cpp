@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -1085,9 +1085,11 @@ bool Map::ActiveObjectsNearGrid(uint32 x, uint32 y) const
 void Map::AddToActive( WorldObject* obj )
 {
     m_activeNonPlayers.insert(obj);
+    Cell cell = Cell(MaNGOS::ComputeCellPair(obj->GetPositionX(), obj->GetPositionY()));
+    EnsureGridLoaded(cell);
 
     // also not allow unloading spawn grid to prevent creating creature clone at load
-    if (obj->GetTypeId()==TYPEID_UNIT)
+    if (obj->GetTypeId() == TYPEID_UNIT)
     {
         Creature* c= (Creature*)obj;
 
@@ -1265,9 +1267,8 @@ bool DungeonMap::CanEnter(Player *player)
         return false;
     }
 
-    // cannot enter while players in the instance are in combat
-    Group *pGroup = player->GetGroup();
-    if(pGroup && pGroup->InCombatToInstance(GetInstanceId()) && player->isAlive() && player->GetMapId() != GetId())
+    // cannot enter while an encounter in the instance is in progress
+    if (!player->isGameMaster() && GetInstanceData() && GetInstanceData()->IsEncounterInProgress() && player->GetMapId() != GetId())
     {
         player->SendTransferAborted(GetId(), TRANSFER_ABORT_ZONE_IN_COMBAT);
         return false;
@@ -1941,14 +1942,25 @@ void Map::ScriptsProcess()
                     break;
                 }
 
-                Unit * unit = (Unit*)source;
+                Unit* unit = (Unit*)source;
+
+                // Just turn around
+                if (step.script->x == 0.0f && step.script->y == 0.0f && step.script->z == 0.0f ||
+                    // Check point-to-point distance, hence revert effect of bounding radius
+                    unit->IsWithinDist3d(step.script->x, step.script->y, step.script->z, 0.01f - unit->GetObjectBoundingRadius()))
+                {
+                    unit->SetFacingTo(step.script->o);
+                    break;
+                }
+
+
                 if (step.script->moveTo.travelTime != 0)
                 {
                     float speed = unit->GetDistance(step.script->x, step.script->y, step.script->z) / ((float)step.script->moveTo.travelTime * 0.001f);
                     unit->MonsterMoveWithSpeed(step.script->x, step.script->y, step.script->z, speed);
                 }
                 else
-                    unit->NearTeleportTo(step.script->x, step.script->y, step.script->z, unit->GetOrientation());
+                    unit->NearTeleportTo(step.script->x, step.script->y, step.script->z, step.script->o != 0.0f ? step.script->o : unit->GetOrientation());
                 break;
             }
             case SCRIPT_COMMAND_FLAG_SET:
@@ -2516,7 +2528,7 @@ void Map::ScriptsProcess()
                         if (target && target->GetTypeId() == TYPEID_UNIT)
                             pMover = (Creature*)target;
                     }
-                    else if (pSource->GetTypeId() == TYPEID_UNIT)
+                    else
                         pMover = (Creature*)pSource;
                 }
                 else                                        // If step has a buddy entry defined, search for it
@@ -2577,7 +2589,7 @@ void Map::ScriptsProcess()
                         if (target && target->GetTypeId() == TYPEID_UNIT)
                             pOwner = (Creature*)target;
                     }
-                    else if (pSource->GetTypeId() == TYPEID_UNIT)
+                    else
                         pOwner = (Creature*)pSource;
                 }
                 else                                        // If step has a buddy entry defined, search for it
@@ -2623,7 +2635,7 @@ void Map::ScriptsProcess()
                         if (target && target->GetTypeId() == TYPEID_UNIT)
                             pOwner = (Creature*)target;
                     }
-                    else if (pSource->GetTypeId() == TYPEID_UNIT)
+                    else
                         pOwner = (Creature*)pSource;
                 }
                 else                                        // If step has a buddy entry defined, search for it
@@ -2673,7 +2685,7 @@ void Map::ScriptsProcess()
                         if (target && target->GetTypeId() == TYPEID_UNIT)
                             pOwner = (Creature*)target;
                     }
-                    else if (pSource->GetTypeId() == TYPEID_UNIT)
+                    else
                         pOwner = (Creature*)pSource;
                 }
                 else                                        // If step has a buddy entry defined, search for it
@@ -2730,7 +2742,7 @@ void Map::ScriptsProcess()
                         if (target && target->GetTypeId() == TYPEID_UNIT)
                             pOwner = (Creature*)target;
                     }
-                    else if (pSource->GetTypeId() == TYPEID_UNIT)
+                    else
                         pOwner = (Creature*)pSource;
                 }
                 else                                        // If step has a buddy entry defined, search for it
@@ -2787,7 +2799,7 @@ void Map::ScriptsProcess()
                         if (target && target->GetTypeId() == TYPEID_UNIT)
                             pOwner = (Creature*)target;
                     }
-                    else if (pSource->GetTypeId() == TYPEID_UNIT)
+                    else
                         pOwner = (Creature*)pSource;
                 }
                 else                                        // If step has a buddy entry defined, search for it
@@ -2966,8 +2978,68 @@ void Map::ScriptsProcess()
                 ((Unit*)pSource)->SetStandState(step.script->standState.stand_state);
                 break;
             }
+            case SCRIPT_COMMAND_MODIFY_NPC_FLAGS:
+            {
+                if (!source && !target)
+                {
+                    sLog.outError("SCRIPT_COMMAND_MODIFY_NPC_FLAGS (script id %u) call for NULL source and NULL target.", step.script->id);
+                    break;
+                }
+
+                if ((!source || !source->isType(TYPEMASK_WORLDOBJECT)) && (!target || !target->isType(TYPEMASK_WORLDOBJECT)))
+                {
+                    sLog.outError("SCRIPT_COMMAND_MODIFY_NPC_FLAGS (script id %u) call for unsupported non-worldobject (TypeId: %u), skipping.", step.script->id, source ? source->GetTypeId() : target->GetTypeId());
+                    break;
+                }
+
+                WorldObject* pSource = source && source->isType(TYPEMASK_WORLDOBJECT) ? (WorldObject*)source : (WorldObject*)target;
+                Creature* pBuddy = NULL;
+
+                // No buddy defined, so try use source (or target if source is not creature)
+                if (!step.script->npcFlag.creatureEntry)
+                {
+                    if (pSource->GetTypeId() != TYPEID_UNIT)
+                    {
+                        // we can't be non-creature, so see if target is creature
+                        if (target && target->GetTypeId() == TYPEID_UNIT)
+                            pBuddy = (Creature*)target;
+                    }
+                    else
+                        pBuddy = (Creature*)pSource;
+                }
+                else                                        // If step has a buddy entry defined, search for it
+                {
+                    MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck u_check(*pSource, step.script->npcFlag.creatureEntry, true, step.script->npcFlag.searchRadius);
+                    MaNGOS::CreatureLastSearcher<MaNGOS::NearestCreatureEntryWithLiveStateInObjectRangeCheck> searcher(pBuddy, u_check);
+
+                    Cell::VisitGridObjects(pSource, searcher, step.script->npcFlag.searchRadius);
+                }
+
+                if (!pBuddy)
+                {
+                    sLog.outError("SCRIPT_COMMAND_MODIFY_NPC_FLAGS (script id %u) call for non-creature (TypeIdSource: %u)(TypeIdTarget: %u), skipping.", step.script->id, source ? source->GetTypeId() : 0, target ? target->GetTypeId() : 0);
+                    break;
+                }
+
+                // Add Flags
+                if (step.script->npcFlag.data_flags & 0x01)
+                    pBuddy->SetFlag(UNIT_NPC_FLAGS, step.script->npcFlag.flag);
+                // Remove Flags
+                else if (step.script->npcFlag.data_flags & 0x02)
+                    pBuddy->RemoveFlag(UNIT_NPC_FLAGS, step.script->npcFlag.flag);
+                // Toggle Flags
+                else
+                {
+                    if (pBuddy->HasFlag(UNIT_NPC_FLAGS, step.script->npcFlag.flag))
+                        pBuddy->RemoveFlag(UNIT_NPC_FLAGS, step.script->npcFlag.flag);
+                    else
+                        pBuddy->SetFlag(UNIT_NPC_FLAGS, step.script->npcFlag.flag);
+                }
+
+                break;
+            }
             default:
-                sLog.outError("Unknown SCRIPT_COMMAND_ %u called for script id %u.",step.script->command, step.script->id);
+                sLog.outError("Unknown SCRIPT_COMMAND_ %u called for script id %u.", step.script->command, step.script->id);
                 break;
         }
 
@@ -3164,23 +3236,12 @@ class StaticMonsterChatBuilder
         }
         void operator()(WorldPacket& data, int32 loc_idx)
         {
-            char const* text = sObjectMgr.GetMangosString(i_textId,loc_idx);
+            char const* text = sObjectMgr.GetMangosString(i_textId, loc_idx);
 
-            std::string nameForLocale = "";
-            if (loc_idx >= 0)
-            {
-                CreatureLocale const *cl = sObjectMgr.GetCreatureLocale(i_cInfo->Entry);
-                if (cl)
-                {
-                    if (cl->Name.size() > (size_t)loc_idx && !cl->Name[loc_idx].empty())
-                        nameForLocale = cl->Name[loc_idx];
-                }
-            }
+            char const* nameForLocale = i_cInfo->Name;
+            sObjectMgr.GetCreatureLocaleStrings(i_cInfo->Entry, loc_idx, &nameForLocale);
 
-            if (nameForLocale.empty())
-                nameForLocale = i_cInfo->Name;
-
-            WorldObject::BuildMonsterChat(&data, i_senderGuid, i_msgtype, text, i_language, nameForLocale.c_str(), i_target ? i_target->GetObjectGuid() : ObjectGuid(), i_target ? i_target->GetNameForLocaleIdx(loc_idx) : "");
+            WorldObject::BuildMonsterChat(&data, i_senderGuid, i_msgtype, text, i_language, nameForLocale, i_target ? i_target->GetObjectGuid() : ObjectGuid(), i_target ? i_target->GetNameForLocaleIdx(loc_idx) : "");
         }
 
     private:
@@ -3246,13 +3307,15 @@ void Map::MonsterYellToMap(CreatureInfo const* cinfo, int32 textId, uint32 langu
  * Function to play sound to all players in map
  *
  * @param soundId Played Sound
+ * @param zoneId Id of the Zone to which the sound should be restricted
  */
-void Map::PlayDirectSoundToMap(uint32 soundId)
+void Map::PlayDirectSoundToMap(uint32 soundId, uint32 zoneId /*=0*/)
 {
     WorldPacket data(SMSG_PLAY_SOUND, 4);
     data << uint32(soundId);
 
     Map::PlayerList const& pList = GetPlayers();
     for (PlayerList::const_iterator itr = pList.begin(); itr != pList.end(); ++itr)
-        itr->getSource()->SendDirectMessage(&data);
+        if (!zoneId || itr->getSource()->GetZoneId() == zoneId)
+            itr->getSource()->SendDirectMessage(&data);
 }

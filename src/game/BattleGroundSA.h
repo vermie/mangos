@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,9 @@
 #define __BATTLEGROUNDSA_H
 
 class BattleGround;
+
+#define BG_SA_EVENT_START_BATTLE_1      23748       // Ally / Horde likely
+#define BG_SA_EVENT_START_BATTLE_2      21702
 
 class BattleGroundSAScore : public BattleGroundScore
 {

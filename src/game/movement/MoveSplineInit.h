@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,6 +26,14 @@ class Unit;
 
 namespace Movement
 {
+    enum AnimType
+    {
+        ToGround    = 0, // 460 = ToGround, index of AnimationData.dbc
+        FlyToFly    = 1, // 461 = FlyToFly?
+        ToFly       = 2, // 458 = ToFly
+        FlyToGround = 3, // 463 = FlyToGround
+    };
+
     /*  Initializes and launches spline movement
      */
     class MANGOS_DLL_SPEC MoveSplineInit
@@ -33,7 +41,7 @@ namespace Movement
     public:
 
         explicit MoveSplineInit(Unit& m);
-        
+
         /* Final pass of initialization that launches spline movement.
          * @return duration - estimated travel time
          */
@@ -43,13 +51,17 @@ namespace Movement
          * @param amplitude  - the maximum height of parabola, value could be negative and positive
          * @param start_time - delay between movement starting time and beginning to move by parabolic trajectory
          * can't be combined with final animation
-         */ 
-        void SetParabolic(float amplitude, float start_time, bool is_knockback = false);
+         */
+        void SetParabolic(float amplitude, float start_time);
+        /* Plays animation after movement done
+         * can't be combined with parabolic movement
+         */
+        void SetAnimation(AnimType anim);
 
         /* Adds final facing animation
          * sets unit's facing to specified point/angle after all path done
          * you can have only one final facing: previous will be overriden
-         */ 
+         */
         void SetFacing(float angle);
         void SetFacing(Vector3 const& point);
         void SetFacing(const Unit * target);
@@ -57,11 +69,11 @@ namespace Movement
         /* Initializes movement by path
          * @param path - array of points, shouldn't be empty
          * @param pointId - Id of fisrt point of the path. Example: when third path point will be done it will notify that pointId + 3 done
-         */ 
+         */
         void MovebyPath(const PointsArray& path, int32 pointId = 0);
 
         /* Initializes simple A to B mition, A is current unit's position, B is destination
-         */ 
+         */
         void MoveTo(const Vector3& destination, bool generatePath = false, bool forceDestination = false);
         void MoveTo(float x, float y, float z, bool generatePath = false, bool forceDestination = false);
 
@@ -75,10 +87,10 @@ namespace Movement
          */
         void SetSmooth();
         /* Enables CatmullRom spline interpolation mode, enables flying animation. Disabled by default
-         */ 
+         */
         void SetFly();
         /* Enables walk mode. Disabled by default
-         */ 
+         */
         void SetWalk(bool enable);
         /* Makes movement cyclic. Disabled by default
          */
@@ -86,15 +98,18 @@ namespace Movement
         /* Enables falling mode. Disabled by default
          */
         void SetFall();
-        /*  Disabled by default
+        /* Inverses unit model orientation. Disabled by default
          */
-        void SetBackward();
+        void SetOrientationInversed();
+        /* Fixes unit's model rotation. Disabled by default
+         */
+        void SetOrientationFixed(bool enable);
 
         /* Sets the velocity (in case you want to have custom movement velocity)
          * if no set, speed will be selected based on unit's speeds and current movement mode
          * Has no effect if falling mode enabled
          * velocity shouldn't be negative
-         */ 
+         */
         void SetVelocity(float velocity);
 
         PointsArray& Path() { return args.path; }
@@ -104,15 +119,6 @@ namespace Movement
         MoveSplineInitArgs args;
         Unit&  unit;
     };
-    
-    inline void MoveJumpInit(Unit& st, const Vector3& dest, float velocity, float parabolic_heigth = 0.5f)
-    {
-        MoveSplineInit init(st);
-        init.MoveTo(dest);
-        init.SetParabolic(parabolic_heigth,0,false);
-        init.SetVelocity(velocity);
-        init.Launch();
-    }
 
     inline void MoveSplineInit::SetFly() { args.flags.EnableFlying();}
     inline void MoveSplineInit::SetWalk(bool enable) { args.flags.walkmode = enable;}
@@ -120,7 +126,8 @@ namespace Movement
     inline void MoveSplineInit::SetCyclic() { args.flags.cyclic = true;}
     inline void MoveSplineInit::SetFall() { args.flags.EnableFalling();}
     inline void MoveSplineInit::SetVelocity(float vel){  args.velocity = vel;}
-    inline void MoveSplineInit::SetBackward() { args.flags.backward = true;}
+    inline void MoveSplineInit::SetOrientationInversed() { args.flags.orientationInversed = true;}
+    inline void MoveSplineInit::SetOrientationFixed(bool enable) { args.flags.orientationFixed = enable;}
 
     inline void MoveSplineInit::MovebyPath(const PointsArray& controls, int32 path_offset)
     {
@@ -150,18 +157,17 @@ namespace Movement
         }
     }
 
-    inline void MoveSplineInit::SetParabolic(float amplitude, float time_shift, bool is_knockback)
+    inline void MoveSplineInit::SetParabolic(float amplitude, float time_shift)
     {
         args.time_perc = time_shift;
         args.parabolic_amplitude = amplitude;
         args.flags.EnableParabolic();
-        args.flags.knockback = is_knockback;
     }
 
-    inline void MoveSplineInit::SetFacing(float o)
+    inline void MoveSplineInit::SetAnimation(AnimType anim)
     {
-        args.facing.angle = G3D::wrap(o, 0.f, (float)G3D::twoPi());
-        args.flags.EnableFacingAngle();
+        args.time_perc = 0.f;
+        args.flags.EnableAnimation((uint8)anim);
     }
 
     inline void MoveSplineInit::SetFacing(Vector3 const& spot)

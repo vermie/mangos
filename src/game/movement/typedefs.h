@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -73,6 +73,9 @@ namespace Movement
     };
 
     typedef counter<uint32, 0xFFFFFFFF> UInt32Counter;
+
+    extern double gravity;
+    extern float computeFallElevation(float t_passed, bool isSafeFall, float start_velocity);
 }
 
 #endif // MANGOSSERVER_TYPEDEFS_H

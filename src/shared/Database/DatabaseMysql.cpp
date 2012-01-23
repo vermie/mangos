@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -137,44 +137,41 @@ bool MySQLConnection::Initialize(const char *infoString)
     mMysql = mysql_real_connect(mysqlInit, host.c_str(), user.c_str(),
         password.c_str(), database.c_str(), port, unix_socket, 0);
 
-    if (mMysql)
-    {
-        DETAIL_LOG( "Connected to MySQL database at %s",
-            host.c_str());
-        sLog.outString( "MySQL client library: %s", mysql_get_client_info());
-        sLog.outString( "MySQL server ver: %s ", mysql_get_server_info( mMysql));
-
-        /*----------SET AUTOCOMMIT ON---------*/
-        // It seems mysql 5.0.x have enabled this feature
-        // by default. In crash case you can lose data!!!
-        // So better to turn this off
-        // ---
-        // This is wrong since mangos use transactions,
-        // autocommit is turned of during it.
-        // Setting it to on makes atomic updates work
-        // ---
-        // LEAVE 'AUTOCOMMIT' MODE ALWAYS ENABLED!!!
-        // W/O IT EVEN 'SELECT' QUERIES WOULD REQUIRE TO BE WRAPPED INTO 'START TRANSACTION'<>'COMMIT' CLAUSES!!!
-        if (!mysql_autocommit(mMysql, 1))
-            DETAIL_LOG("AUTOCOMMIT SUCCESSFULLY SET TO 1");
-        else
-            DETAIL_LOG("AUTOCOMMIT NOT SET TO 1");
-        /*-------------------------------------*/
-
-        // set connection properties to UTF8 to properly handle locales for different
-        // server configs - core sends data in UTF8, so MySQL must expect UTF8 too
-        Execute("SET NAMES `utf8`");
-        Execute("SET CHARACTER SET `utf8`");
-
-        return true;
-    }
-    else
+    if (!mMysql)
     {
         sLog.outError( "Could not connect to MySQL database at %s: %s\n",
             host.c_str(),mysql_error(mysqlInit));
         mysql_close(mysqlInit);
         return false;
     }
+
+    DETAIL_LOG("Connected to MySQL database %s@%s:%s/%s", user.c_str(), host.c_str(), port_or_socket.c_str(), database.c_str());
+    sLog.outString("MySQL client library: %s", mysql_get_client_info());
+    sLog.outString("MySQL server ver: %s ", mysql_get_server_info( mMysql));
+
+    /*----------SET AUTOCOMMIT ON---------*/
+    // It seems mysql 5.0.x have enabled this feature
+    // by default. In crash case you can lose data!!!
+    // So better to turn this off
+    // ---
+    // This is wrong since mangos use transactions,
+    // autocommit is turned of during it.
+    // Setting it to on makes atomic updates work
+    // ---
+    // LEAVE 'AUTOCOMMIT' MODE ALWAYS ENABLED!!!
+    // W/O IT EVEN 'SELECT' QUERIES WOULD REQUIRE TO BE WRAPPED INTO 'START TRANSACTION'<>'COMMIT' CLAUSES!!!
+    if (!mysql_autocommit(mMysql, 1))
+        DETAIL_LOG("AUTOCOMMIT SUCCESSFULLY SET TO 1");
+    else
+        DETAIL_LOG("AUTOCOMMIT NOT SET TO 1");
+    /*-------------------------------------*/
+
+    // set connection properties to UTF8 to properly handle locales for different
+    // server configs - core sends data in UTF8, so MySQL must expect UTF8 too
+    Execute("SET NAMES `utf8`");
+    Execute("SET CHARACTER SET `utf8`");
+
+    return true;
 }
 
 bool MySQLConnection::_Query(const char *sql, MYSQL_RES **pResult, MYSQL_FIELD **pFields, uint64* pRowCount, uint32* pFieldCount)
@@ -484,9 +481,10 @@ enum_field_types MySqlPreparedStatement::ToMySQLType( const SqlStmtFieldData &da
     switch (data.type())
     {
     case FIELD_NONE:    dataType = MYSQL_TYPE_NULL;                     break;
-    case FIELD_BOOL:    dataType = MYSQL_TYPE_BIT;      bUnsigned = 1;  break;
-    case FIELD_I8:      dataType = MYSQL_TYPE_TINY;                     break;
+    // MySQL does not support MYSQL_TYPE_BIT as input type
+    case FIELD_BOOL:    //dataType = MYSQL_TYPE_BIT;      bUnsigned = 1;  break;
     case FIELD_UI8:     dataType = MYSQL_TYPE_TINY;     bUnsigned = 1;  break;
+    case FIELD_I8:      dataType = MYSQL_TYPE_TINY;                     break;
     case FIELD_I16:     dataType = MYSQL_TYPE_SHORT;                    break;
     case FIELD_UI16:    dataType = MYSQL_TYPE_SHORT;    bUnsigned = 1;  break;
     case FIELD_I32:     dataType = MYSQL_TYPE_LONG;                     break;

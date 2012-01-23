@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -63,6 +63,7 @@ namespace Movement
         //float           duration_mod;
         //float           duration_mod_next;
         float           vertical_acceleration;
+        float           initialOrientation;
         int32           effect_start_time;
         int32           point_Idx;
         int32           point_Idx_offset;
@@ -84,6 +85,7 @@ namespace Movement
         const MySpline& _Spline() const { return spline;}
         int32 _currentSplineIdx() const { return point_Idx;}
         void _Finalize();
+        void _Interrupt() { splineflags.done = true;}
 
         #pragma endregion
     public:
