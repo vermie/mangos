@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,6 +28,8 @@
 #include "WaypointMovementGenerator.h"
 #include "RandomMovementGenerator.h"
 #include "movement/MoveSpline.h"
+#include "movement/MoveSplineInit.h"
+#include "CreatureLinkingMgr.h"
 
 #include <cassert>
 
@@ -58,8 +60,14 @@ void MotionMaster::Initialize()
 
 MotionMaster::~MotionMaster()
 {
-    // clear ALL movement generators (including default)
-    DirectClean(false,true);
+    // just deallocate movement generator, but do not Finalize since it may access to already deallocated owner's memory
+    while(!empty())
+    {
+        MovementGenerator * m = top();
+        pop();
+        if (!isStatic(m))
+            delete m;
+    }
 }
 
 void MotionMaster::UpdateMotion(uint32 diff)
@@ -236,8 +244,14 @@ void MotionMaster::MoveTargetedHome()
 
     if (m_owner->GetTypeId() == TYPEID_UNIT && !((Creature*)m_owner)->GetCharmerOrOwnerGuid())
     {
-        DEBUG_FILTER_LOG(LOG_FILTER_AI_AND_MOVEGENSS, "%s targeted home", m_owner->GetGuidStr().c_str());
-        Mutate(new HomeMovementGenerator<Creature>());
+        // Manual exception for linked mobs
+        if (m_owner->IsLinkingEventTrigger() && m_owner->GetMap()->GetCreatureLinkingHolder()->TryFollowMaster((Creature*)m_owner))
+            DEBUG_FILTER_LOG(LOG_FILTER_AI_AND_MOVEGENSS, "%s refollowed linked master", m_owner->GetGuidStr().c_str());
+        else
+        {
+            DEBUG_FILTER_LOG(LOG_FILTER_AI_AND_MOVEGENSS, "%s targeted home", m_owner->GetGuidStr().c_str());
+            Mutate(new HomeMovementGenerator<Creature>());
+        }
     }
     else if (m_owner->GetTypeId() == TYPEID_UNIT && ((Creature*)m_owner)->GetCharmerOrOwnerGuid())
     {
@@ -415,6 +429,7 @@ void MotionMaster::Mutate(MovementGenerator *m)
             case HOME_MOTION_TYPE:
             // DistractMovement interrupted by any other movement
             case DISTRACT_MOTION_TYPE:
+            case EFFECT_MOTION_TYPE:
                 MovementExpired(false);
             default:
                 break;
@@ -461,4 +476,36 @@ void MotionMaster::UpdateFinalDistanceToTarget(float fDistance)
 {
     if (!empty())
         top()->UpdateFinalDistance(fDistance);
+}
+
+void MotionMaster::MoveJump(float x, float y, float z, float horizontalSpeed, float max_height, uint32 id)
+{
+    Movement::MoveSplineInit init(*m_owner);
+    init.MoveTo(x,y,z);
+    init.SetParabolic(max_height,0);
+    init.SetVelocity(horizontalSpeed);
+    init.Launch();
+    Mutate(new EffectMovementGenerator(id));
+}
+
+void MotionMaster::MoveFall()
+{
+    // use larger distance for vmap height search than in most other cases
+    float tz = m_owner->GetTerrain()->GetHeight(m_owner->GetPositionX(), m_owner->GetPositionY(), m_owner->GetPositionZ(), true, MAX_FALL_DISTANCE);
+    if (tz <= INVALID_HEIGHT)
+    {
+        DEBUG_LOG("MotionMaster::MoveFall: unable retrive a proper height at map %u (x: %f, y: %f, z: %f).",
+            m_owner->GetMap()->GetId(), m_owner->GetPositionX(), m_owner->GetPositionX(), m_owner->GetPositionZ());
+        return;
+    }
+
+    // Abort too if the ground is very near
+    if (fabs(m_owner->GetPositionZ() - tz) < 0.1f)
+        return;
+
+    Movement::MoveSplineInit init(*m_owner);
+    init.MoveTo(m_owner->GetPositionX(),m_owner->GetPositionY(),tz);
+    init.SetFall();
+    init.Launch();
+    Mutate(new EffectMovementGenerator(0));
 }

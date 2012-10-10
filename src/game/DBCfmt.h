@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -41,6 +41,7 @@ const char CreatureFamilyfmt[]="nfifiiiiixssssssssssssssssxx";
 const char CreatureSpellDatafmt[]="niiiixxxx";
 const char CreatureTypefmt[]="nxxxxxxxxxxxxxxxxxx";
 const char CurrencyTypesfmt[]="xnxi";
+const char DungeonEncounterfmt[]="niiiissssssssssssssssxx";
 const char DurabilityCostsfmt[]="niiiiiiiiiiiiiiiiiiiiiiiiiiiii";
 const char DurabilityQualityfmt[]="nf";
 const char EmotesEntryfmt[]="nxxiiix";

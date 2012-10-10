@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 /// Function body definitions for the template function members of the Database class
 
 #define ASYNC_QUERY_BODY(sql) if (!sql || !m_pResultQueue) return false;
-#define ASYNC_DELAYHOLDER_BODY(holder) if (!holder || !m_pResultQueue) return false; 
+#define ASYNC_DELAYHOLDER_BODY(holder) if (!holder || !m_pResultQueue) return false;
 
 #define ASYNC_PQUERY_BODY(format, szQuery) \
     if(!format) return false; \

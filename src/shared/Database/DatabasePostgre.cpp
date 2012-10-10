@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,8 +92,8 @@ bool PostgreSQLConnection::Initialize(const char *infoString)
         return false;
     }
 
-    sLog.outDetail( "Connected to Postgre database at %s", host.c_str());
-    sLog.outString( "PostgreSQL server ver: %d", PQserverVersion(mPGconn));
+    DETAIL_LOG("Connected to Postgre database %s@%s:%s/%s", user.c_str(), host.c_str(), port_or_socket_dir.c_str(), database.c_str());
+    sLog.outString("PostgreSQL server ver: %d", PQserverVersion(mPGconn));
     return true;
 }
 
@@ -226,7 +226,7 @@ bool PostgreSQLConnection::CommitTransaction()
 }
 
 bool PostgreSQLConnection::RollbackTransaction()
-{  
+{
     return _TransactionCmd("ROLLBACK");
 }
 

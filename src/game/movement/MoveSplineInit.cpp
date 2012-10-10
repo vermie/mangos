@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ namespace Movement
     {
         MoveSpline& move_spline = *unit.movespline;
 
-        Vector3 real_position(unit.GetPositionX(),unit.GetPositionY(),unit.GetPositionZ());
+        Location real_position(unit.GetPositionX(),unit.GetPositionY(),unit.GetPositionZ(),unit.GetOrientation());
         // there is a big chane that current position is unknown if current state is not finalized, need compute it
         // this also allows calculate spline position and update map position in much greater intervals
         if (!move_spline.Finalized())
@@ -68,6 +68,8 @@ namespace Movement
 
         // corrent first vertex
         args.path[0] = real_position;
+        args.initialOrientation = real_position.orientation;
+
         uint32 moveFlags = unit.m_movementInfo.GetMovementFlags();
         if (args.flags.walkmode)
             moveFlags |= MOVEFLAG_WALK_MODE;
@@ -75,7 +77,7 @@ namespace Movement
             moveFlags &= ~MOVEFLAG_WALK_MODE;
 
         moveFlags |= (MOVEFLAG_SPLINE_ENABLED|MOVEFLAG_FORWARD);
-        
+
         if (args.velocity == 0.f)
             args.velocity = unit.GetSpeed(SelectSpeedType(moveFlags));
 
@@ -104,5 +106,11 @@ namespace Movement
     {
         args.flags.EnableFacingTarget();
         args.facing.target = target->GetObjectGuid().GetRawValue();
+    }
+
+    void MoveSplineInit::SetFacing(float angle)
+    {
+        args.facing.angle = G3D::wrap(angle, 0.f, (float)G3D::twoPi());
+        args.flags.EnableFacingAngle();
     }
 }

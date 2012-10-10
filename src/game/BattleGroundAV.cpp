@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -282,6 +282,9 @@ void BattleGroundAV::StartingEventOpenDoors()
     UpdateWorldState(BG_AV_SHOW_A_SCORE, 1);
 
     OpenDoorEvent(BG_EVENT_DOOR);
+
+    // Players that join battleground after start are not available to get achievement.
+    StartTimedAchievement(ACHIEVEMENT_CRITERIA_TYPE_WIN_BG, BG_AV_EVENT_START_BATTLE);
 }
 
 void BattleGroundAV::AddPlayer(Player *plr)

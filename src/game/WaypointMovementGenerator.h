@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -42,8 +42,6 @@ class MANGOS_DLL_SPEC PathMovementBase
     public:
         PathMovementBase() : i_currentNode(0) {}
         virtual ~PathMovementBase() {};
-
-        bool MovementInProgress(void) const { return (i_currentNode+1) < i_path->size(); }
 
         // template pattern, not defined .. override required
         void LoadPath(T &);

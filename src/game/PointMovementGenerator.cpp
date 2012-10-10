@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -118,4 +118,26 @@ void AssistanceMovementGenerator::Finalize(Unit &unit)
     ((Creature*)&unit)->CallAssistance();
     if (unit.isAlive())
         unit.GetMotionMaster()->MoveSeekAssistanceDistract(sWorld.getConfig(CONFIG_UINT32_CREATURE_FAMILY_ASSISTANCE_DELAY));
+}
+
+bool EffectMovementGenerator::Update(Unit &unit, const uint32 &)
+{
+    return !unit.movespline->Finalized();
+}
+
+void EffectMovementGenerator::Finalize(Unit &unit)
+{
+    if (unit.GetTypeId() != TYPEID_UNIT)
+        return;
+
+    if (((Creature&)unit).AI() && unit.movespline->Finalized())
+        ((Creature&)unit).AI()->MovementInform(EFFECT_MOTION_TYPE, m_Id);
+    // Need restore previous movement since we have no proper states system
+    if (unit.isAlive() && !unit.hasUnitState(UNIT_STAT_CONFUSED|UNIT_STAT_FLEEING))
+    {
+        if (Unit * victim = unit.getVictim())
+            unit.GetMotionMaster()->MoveChase(victim);
+        else
+            unit.GetMotionMaster()->Initialize();
+    }
 }

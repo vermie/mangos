@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -93,7 +93,7 @@ class ReputationMgr
         int32 GetReputation(FactionEntry const* factionEntry) const;
         int32 GetBaseReputation(FactionEntry const* factionEntry) const;
 
-        ReputationRank GetRank(FactionEntry const* factionEntry) const;
+        ReputationRank GetRank(FactionEntry const* factionEntry, bool withForcedReaction) const;
         ReputationRank GetBaseRank(FactionEntry const* factionEntry) const;
 
         ReputationRank const* GetForcedRankIfAny(FactionTemplateEntry const* factionTemplateEntry) const

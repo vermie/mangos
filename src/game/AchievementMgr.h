@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -69,8 +69,6 @@ enum AchievementCriteriaRequirementType
     ACHIEVEMENT_CRITERIA_REQUIRE_NTH_BIRTHDAY        = 20,  // N                            login on day of N-th Birthday
     ACHIEVEMENT_CRITERIA_REQUIRE_KNOWN_TITLE         = 21,  // title_id                     known (pvp) title, values from dbc
 };
-
-#define MAX_ACHIEVEMENT_CRITERIA_REQUIREMENT_TYPE      22   // maximum value in AchievementCriteriaRequirementType enum
 
 class Player;
 class Unit;

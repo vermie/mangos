@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,6 +57,21 @@ class MANGOS_DLL_SPEC AssistanceMovementGenerator
 
         MovementGeneratorType GetMovementGeneratorType() const { return ASSISTANCE_MOTION_TYPE; }
         void Finalize(Unit &);
+};
+
+// Does almost nothing - just doesn't allows previous movegen interrupt current effect. Can be reused for charge effect
+class EffectMovementGenerator : public MovementGenerator
+{
+    public:
+        explicit EffectMovementGenerator(uint32 Id) : m_Id(Id) {}
+        void Initialize(Unit &) {}
+        void Finalize(Unit &unit);
+        void Interrupt(Unit &) {}
+        void Reset(Unit &) {}
+        bool Update(Unit &u, const uint32 &);
+        MovementGeneratorType GetMovementGeneratorType() const { return EFFECT_MOTION_TYPE; }
+    private:
+        uint32 m_Id;
 };
 
 #endif

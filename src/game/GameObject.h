@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -549,6 +549,16 @@ enum GOState
 
 #define MAX_GO_STATE              3
 
+struct QuaternionData
+{
+    float x, y, z, w;
+
+    QuaternionData() : x(0.f), y(0.f), z(0.f), w(0.f) {}
+    QuaternionData(float X, float Y, float Z, float W) : x(X), y(Y), z(Z), w(W) {}
+
+    bool isUnit() const { return fabs(x*x + y*y + z*z + w*w - 1.f) < 1e-5;}
+};
+
 // from `gameobject`
 struct GameObjectData
 {
@@ -559,14 +569,18 @@ struct GameObjectData
     float posY;
     float posZ;
     float orientation;
-    float rotation0;
-    float rotation1;
-    float rotation2;
-    float rotation3;
+    QuaternionData rotation;
     int32  spawntimesecs;
     uint32 animprogress;
     GOState go_state;
     uint8 spawnMask;
+};
+
+// from `gameobject_addon`
+struct GameObjectDataAddon
+{
+    uint32 guid;
+    QuaternionData path_rotation;
 };
 
 // For containers:  [GO_NOT_READY]->GO_READY (close)->GO_ACTIVATED (open) ->GO_JUST_DEACTIVATED->GO_READY        -> ...
@@ -598,7 +612,8 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         void AddToWorld();
         void RemoveFromWorld();
 
-        bool Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang, float rotation0, float rotation1, float rotation2, float rotation3, uint8 animprogress, GOState go_state);
+        bool Create(uint32 guidlow, uint32 name_id, Map *map, uint32 phaseMask, float x, float y, float z, float ang,
+            QuaternionData rotation = QuaternionData(), uint8 animprogress = GO_ANIMPROGRESS_DEFAULT, GOState go_state = GO_STATE_READY);
         void Update(uint32 update_diff, uint32 p_time) override;
         GameObjectInfo const* GetGOInfo() const;
 
@@ -608,9 +623,9 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         // z_rot, y_rot, x_rot - rotation angles around z, y and x axes
         void SetWorldRotationAngles(float z_rot, float y_rot, float x_rot);
-        void SetWorldRotation(float qx, float qy, float qz, float qw);   
-        void SetTransportPathRotation(float qx, float qy, float qz, float qw);      // transforms(rotates) transport's path
-        int64 GetRotation() const { return m_rotation; }
+        void SetWorldRotation(float qx, float qy, float qz, float qw);
+        void SetTransportPathRotation(QuaternionData rotation);      // transforms(rotates) transport's path
+        int64 GetPackedWorldRotation() const { return m_packedRotation; }
 
         // overwrite WorldObject function for proper name localization
         const char* GetNameForLocaleIdx(int32 locale_idx) const;
@@ -666,7 +681,6 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
         static void AddToRemoveListInMaps(uint32 db_guid, GameObjectData const* data);
         static void SpawnInMaps(uint32 db_guid, GameObjectData const* data);
 
-        void getFishLoot(Loot *loot, Player* loot_owner);
         GameobjectTypes GetGoType() const { return GameobjectTypes(GetByteValue(GAMEOBJECT_BYTES_1, 1)); }
         void SetGoType(GameobjectTypes type) { SetByteValue(GAMEOBJECT_BYTES_1, 1, type); }
         GOState GetGoState() const { return GOState(GetByteValue(GAMEOBJECT_BYTES_1, 0)); }
@@ -704,7 +718,19 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         void SaveRespawnTime();
 
-        Loot        loot;
+        // Loot System
+        Loot loot;
+        void getFishLoot(Loot* loot, Player* loot_owner);
+        void StartGroupLoot(Group* group, uint32 timer);
+
+        ObjectGuid GetLootRecipientGuid() const { return m_lootRecipientGuid; }
+        uint32 GetLootGroupRecipientId() const { return m_lootGroupRecipientId; }
+        Player* GetLootRecipient() const;                   // use group cases as prefered
+        Group* GetGroupLootRecipient() const;
+        bool HasLootRecipient() const { return m_lootGroupRecipientId || !m_lootRecipientGuid.IsEmpty(); }
+        bool IsGroupLootRecipient() const { return m_lootGroupRecipientId; }
+        void SetLootRecipient(Unit* pUnit);
+        Player* GetOriginalLootRecipient() const;           // ignore group changes/etc, not for looting
 
         bool HasQuest(uint32 quest_id) const;
         bool HasInvolvedQuest(uint32 quest_id) const;
@@ -746,8 +772,16 @@ class MANGOS_DLL_SPEC GameObject : public WorldObject
 
         GameObjectInfo const* m_goInfo;
         GameObjectDisplayInfoEntry const* m_displayInfo;
-        int64 m_rotation;
-        float m_quatX, m_quatY, m_quatZ, m_quatW;
+        int64 m_packedRotation;
+        QuaternionData m_worldRotation;
+
+        // Loot System
+        uint32 m_groupLootTimer;                            // (msecs)timer used for group loot
+        uint32 m_groupLootId;                               // used to find group which is looting
+        void StopGroupLoot();
+        ObjectGuid m_lootRecipientGuid;                     // player who will have rights for looting if m_lootGroupRecipient==0 or group disbanded
+        uint32 m_lootGroupRecipientId;                      // group who will have rights for looting if set and exist
+
     private:
         void SwitchDoorOrButton(bool activate, bool alternative = false);
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -124,6 +124,8 @@ class MANGOS_DLL_SPEC ChatHandler
 
         bool SetDataForCommandInTable(ChatCommand *table, const char* text, uint32 security, std::string const& help);
         void ExecuteCommand(const char* text);
+        void LogCommand(char const* fullcmd);
+
         bool ShowHelpForCommand(ChatCommand *table, const char* cmd);
         bool ShowHelpForSubCommands(ChatCommand *table, char const* cmd);
         ChatCommandSearchResult FindCommand(ChatCommand* table, char const*& text, ChatCommand*& command, ChatCommand** parentCommand = NULL, std::string* cmdNamePtr = NULL, bool allAvailable = false, bool exactlyName = false);
@@ -141,6 +143,16 @@ class MANGOS_DLL_SPEC ChatHandler
         bool HandleAccountSetAddonCommand(char* args);
         bool HandleAccountSetGmLevelCommand(char* args);
         bool HandleAccountSetPasswordCommand(char* args);
+
+        bool HandleAHBotItemsAmountCommand(char* args);
+        template <int Q>
+        bool HandleAHBotItemsAmountQualityCommand(char* args);
+        bool HandleAHBotItemsRatioCommand(char* args);
+        template <int H>
+        bool HandleAHBotItemsRatioHouseCommand(char* args);
+        bool HandleAHBotRebuildCommand(char* args);
+        bool HandleAHBotReloadCommand(char* args);
+        bool HandleAHBotStatusCommand(char* args);
 
         bool HandleAuctionAllianceCommand(char* args);
         bool HandleAuctionGoblinCommand(char* args);
@@ -402,7 +414,6 @@ class MANGOS_DLL_SPEC ChatHandler
         bool HandleReloadGameObjectScriptsCommand(char* args);
         bool HandleReloadGameTeleCommand(char* args);
         bool HandleReloadGossipMenuCommand(char* args);
-        bool HandleReloadGossipMenuOptionCommand(char* args);
         bool HandleReloadGossipScriptsCommand(char* args);
         bool HandleReloadGOQuestRelationsCommand(char* args);
         bool HandleReloadGOQuestInvRelationsCommand(char* args);
@@ -585,6 +596,7 @@ class MANGOS_DLL_SPEC ChatHandler
         bool HandleStableCommand(char* args);
         bool HandleWaterwalkCommand(char* args);
         bool HandleQuitCommand(char* args);
+        bool HandleShowGearScoreCommand(char* args);
 
         bool HandleMmapPathCommand(char* args);
         bool HandleMmapLocCommand(char* args);

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ enum MovementGeneratorType
     ASSISTANCE_DISTRACT_MOTION_TYPE = 12,                   // IdleMovementGenerator.h (second part of flee for assistance)
     TIMED_FLEEING_MOTION_TYPE       = 13,                   // FleeingMovementGenerator.h (alt.second part of flee for assistance)
     FOLLOW_MOTION_TYPE              = 14,                   // TargetedMovementGenerator.h
+    EFFECT_MOTION_TYPE              = 15,
 };
 
 enum MMCleanFlag
@@ -107,6 +108,8 @@ class MANGOS_DLL_SPEC MotionMaster : private std::stack<MovementGenerator *>
         void MoveWaypoint();
         void MoveTaxiFlight(uint32 path, uint32 pathnode);
         void MoveDistract(uint32 timeLimit);
+        void MoveJump(float x, float y, float z, float horizontalSpeed, float max_height, uint32 id = 0);
+        void MoveFall();
 
         MovementGeneratorType GetCurrentMovementGeneratorType() const;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -25,6 +25,7 @@
 #define BG_WS_FLAG_RESPAWN_TIME   (23*IN_MILLISECONDS)
 #define BG_WS_FLAG_DROP_TIME      (10*IN_MILLISECONDS)
 #define BG_WS_TIME_LIMIT          (25*MINUTE*IN_MILLISECONDS)
+#define BG_WS_EVENT_START_BATTLE  8563
 
 enum BG_WS_Sound
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2011 MaNGOS <http://getmangos.com/>
+ * Copyright (C) 2005-2012 MaNGOS <http://getmangos.com/>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -388,7 +388,8 @@ bool StartDB()
         return false;
     }
 
-    sLog.outString("Database: %s", dbstring.c_str() );
+    sLog.outString("Login Database total connections: %i", 1 + 1);
+
     if(!LoginDatabase.Initialize(dbstring.c_str()))
     {
         sLog.outError("Cannot connect to database");
